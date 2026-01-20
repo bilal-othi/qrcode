@@ -1,0 +1,14 @@
+{
+  "name": "qrcode-checkin",
+  "version": "1.0.0",
+  "description": "QR code check-in application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "qrcode": "^1.5.3",
+    "body-parser": "^1.20.2"
+  }
+}

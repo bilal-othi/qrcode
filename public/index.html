@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entry Waiver & Check-In</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Entry Waiver & Check-In</h1>
+        <form id="checkinForm">
+            <div class="form-group">
+                <div class="waiver-text">
+                    <p>To the fullest extent permitted by applicable law, the undersigned knowingly, voluntarily, and intelligently waives, releases, and forever discharges the released parties from any and all claims, causes of action, liabilities, damages, losses, costs, and demands of every kind whatsoever, including but not limited to claims arising from the released parties' own negligence, whether known or unknown, foreseen or unforeseen, arising out of or relating to this agreement or the conduct of the released parties, and agrees that any dispute, claim, or action arising out of or relating to this waiver or the released parties shall be brought exclusively in the state or federal courts located in the State of Alaska, which venue is acknowledged as proper based on the Alaska domicile of the released parties, except for claims based on gross negligence, willful misconduct, or intentional torts, which are expressly not waived.</p>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="checked" name="checked" required>
+                    <span>I agree to terms of the waiver for entry</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required placeholder="Enter your name">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+            </div>
+            
+            <button type="submit" id="submitBtn">Submit</button>
+        </form>
+        
+        <div id="message" class="message"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
