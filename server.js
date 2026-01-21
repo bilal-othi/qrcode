@@ -2,13 +2,21 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const QRCode = require('qrcode');
+const fs = require('fs').promises;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Increase body parser limit for base64 images (10MB)
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+fs.mkdir(uploadsDir, { recursive: true })
+    .then(() => console.log('Uploads directory ready'))
+    .catch(err => console.error('Error creating uploads directory:', err));
 
 // Serve the main check-in page
 app.get('/', (req, res) => {
@@ -73,28 +81,78 @@ app.get('/qr', async (req, res) => {
 });
 
 // Handle form submission
-app.post('/submit', (req, res) => {
-    const { checked, name, phone } = req.body;
+app.post('/submit', async (req, res) => {
+    const { checked, name, phone, selfie } = req.body;
     
-    if (!checked || !name || !phone) {
+    // Validate all required fields
+    if (!checked || !name || !phone || !selfie) {
         return res.status(400).json({ 
             success: false, 
-            message: 'Please fill in all fields and check the box' 
+            message: 'Please fill in all fields, check the box, and take a selfie' 
         });
     }
     
-    // Here you would typically save to database
-    console.log('Check-in received:', { checked, name, phone, timestamp: new Date().toISOString() });
+    // Validate selfie format (should be base64 data URL)
+    if (!selfie.startsWith('data:image/')) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Invalid selfie format. Please take a new selfie.' 
+        });
+    }
     
-    // Send confirmation back
-    res.json({
-        success: true,
-        message: `Thank you ${name}! Your check-in has been confirmed.`,
-        phone: phone
-    });
+    try {
+        // Generate unique filename with timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
+        const filename = `selfie_${sanitizedName}_${timestamp}.jpg`;
+        const filepath = path.join(uploadsDir, filename);
+        
+        // Convert base64 to buffer and save image file
+        const base64Data = selfie.replace(/^data:image\/jpeg;base64,/, '');
+        await fs.writeFile(filepath, base64Data, 'base64');
+        
+        // Create record linking selfie to waiver version
+        // IMPORTANT: Update waiverVersion when waiver text changes
+        const record = {
+            name: name,
+            phone: phone,
+            timestamp: new Date().toISOString(),
+            selfieFile: filename,
+            waiverVersion: '1.0', // Update this when waiver text changes
+            checked: checked,
+            ipAddress: req.ip || req.connection.remoteAddress
+        };
+        
+        // Save record as JSON file
+        const recordFilename = `record_${sanitizedName}_${timestamp}.json`;
+        const recordFilepath = path.join(uploadsDir, recordFilename);
+        await fs.writeFile(recordFilepath, JSON.stringify(record, null, 2), 'utf8');
+        
+        console.log('Check-in received and saved:', {
+            name: record.name,
+            phone: record.phone,
+            timestamp: record.timestamp,
+            selfieFile: record.selfieFile,
+            recordFile: recordFilename
+        });
+        
+        // Send confirmation back
+        res.json({
+            success: true,
+            message: `Thank you ${name}! Your check-in has been confirmed. Your electronic signature has been recorded.`,
+            phone: phone
+        });
+    } catch (error) {
+        console.error('Error saving check-in:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing your check-in. Please try again.'
+        });
+    }
 });
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`QR Code available at http://localhost:${PORT}/qr`);
+    console.log(`Selfies and records will be saved to: ${uploadsDir}`);
 });

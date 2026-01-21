@@ -54,6 +54,42 @@ h1 {
     margin: 0;
 }
 
+.waiver-section {
+    margin-bottom: 20px;
+}
+
+.waiver-section:last-child {
+    margin-bottom: 0;
+}
+
+.waiver-section h3 {
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.waiver-section p {
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+.waiver-section p:last-child {
+    margin-bottom: 0;
+}
+
+/* Florida Statutory Requirement - Section 6.2 Notice must be 5 points larger */
+/* Base font is 14px, so 5 points larger = 19px */
+.florida-notice {
+    font-size: 19px !important;
+    font-weight: 600;
+    color: #000;
+    margin: 15px 0;
+    text-transform: uppercase;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+}
+
 .waiver-text::-webkit-scrollbar {
     width: 6px;
 }
@@ -90,22 +126,43 @@ label {
     height: 20px;
     margin-right: 10px;
     cursor: pointer;
+    accent-color: #667eea;
+    background-color: #ffffff;
+    border: 2px solid #d0d0d0;
+    border-radius: 4px;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.checkbox-label input[type="checkbox"]:hover {
+    border-color: #667eea;
 }
 
 input[type="text"],
 input[type="tel"] {
     width: 100%;
     padding: 14px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #d0d0d0;
     border-radius: 8px;
     font-size: 16px;
-    transition: border-color 0.3s;
+    background-color: #ffffff;
+    color: #333;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 input[type="text"]:focus,
 input[type="tel"]:focus {
     outline: none;
     border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+input[type="text"]::placeholder,
+input[type="tel"]::placeholder {
+    color: #999;
 }
 
 button {
@@ -158,6 +215,88 @@ button:disabled {
     display: block;
 }
 
+/* Selfie capture styles */
+.selfie-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+#video {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    background: #000;
+}
+
+#canvas {
+    display: none;
+}
+
+.selfie-preview {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.selfie-preview img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.retake-btn {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.retake-btn:hover {
+    background: #5a6268;
+}
+
+.capture-btn {
+    padding: 12px 24px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.capture-btn:hover {
+    background: #218838;
+}
+
+.capture-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.selfie-note {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+    font-style: italic;
+    text-align: center;
+}
+
 /* Tablet and Mobile - Below 768px */
 @media (max-width: 768px) {
     body {
@@ -190,6 +329,15 @@ button:disabled {
         margin-bottom: 12px;
     }
 
+    .waiver-section h3 {
+        font-size: 14px;
+    }
+
+    /* Florida notice: 5 points larger than mobile base 12px = 17px */
+    .florida-notice {
+        font-size: 17px !important;
+    }
+
     label {
         font-size: 14px;
         margin-bottom: 6px;
@@ -203,13 +351,16 @@ button:disabled {
         width: 18px;
         height: 18px;
         margin-right: 8px;
+        border: 2px solid #d0d0d0;
     }
 
     input[type="text"],
     input[type="tel"] {
         padding: 12px;
         font-size: 16px; /* Prevents zoom on iOS */
-        border-width: 1.5px;
+        border-width: 2px;
+        border-color: #d0d0d0;
+        background-color: #ffffff;
     }
 
     button {
@@ -248,6 +399,15 @@ button:disabled {
         max-height: 150px;
     }
 
+    .waiver-section h3 {
+        font-size: 13px;
+    }
+
+    /* Florida notice: 5 points larger than small mobile base 11px = 16px */
+    .florida-notice {
+        font-size: 16px !important;
+    }
+
     .form-group {
         margin-bottom: 16px;
     }
@@ -265,6 +425,13 @@ button:disabled {
     input[type="tel"] {
         padding: 14px;
         font-size: 16px;
+        border-color: #d0d0d0;
+        background-color: #ffffff;
+    }
+
+    .selfie-preview img,
+    #video {
+        max-width: 100%;
     }
 
     button {
@@ -295,6 +462,20 @@ button:disabled {
         max-height: 250px;
     }
 
+    .waiver-section h3 {
+        font-size: 17px;
+    }
+
+    /* Florida notice: 5 points larger than desktop base 14px = 19px */
+    .florida-notice {
+        font-size: 19px !important;
+    }
+
+    .selfie-preview img,
+    #video {
+        max-width: 100%;
+    }
+
     label {
         font-size: 16px;
         margin-bottom: 10px;
@@ -308,6 +489,8 @@ button:disabled {
     input[type="tel"] {
         padding: 14px 16px;
         font-size: 16px;
+        border-color: #d0d0d0;
+        background-color: #ffffff;
     }
 
     button {
