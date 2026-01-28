@@ -96,6 +96,71 @@ To change the port, set the `PORT` environment variable:
 PORT=8080 npm start
 ```
 
+## HTTPS Requirement for Camera Access
+
+**IMPORTANT:** Modern browsers require HTTPS for camera access, **EXCEPT** for `localhost` and `127.0.0.1`.
+
+### Understanding the HTTPS Requirement
+
+- ✅ **localhost/127.0.0.1**: Works with HTTP (for testing on same computer)
+- ❌ **IP addresses (192.168.x.x)**: Requires HTTPS (for testing from phone on same network)
+- ❌ **Production domains**: Requires HTTPS
+
+### Why HTTPS is Required
+
+Browsers require HTTPS for camera/microphone access as a security measure to prevent unauthorized access to your camera. This is a browser security feature, not a limitation of this application.
+
+### Testing Options
+
+#### Option 1: Test on Same Computer (HTTP works)
+```bash
+npm start
+# Access via: http://localhost:3000
+# Camera will work on the same computer
+```
+
+#### Option 2: Test from Phone with HTTPS (Recommended)
+
+1. **Generate self-signed certificate:**
+   ```bash
+   npm run generate-cert
+   ```
+
+2. **Start HTTPS server:**
+   ```bash
+   npm run start:https
+   ```
+
+3. **Access from phone:**
+   - Find your computer's IP address: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+   - On your phone, go to: `https://YOUR_IP:3443` (e.g., `https://192.168.1.100:3443`)
+   - Your browser will show a security warning (this is normal for self-signed certs)
+   - Click "Advanced" → "Proceed to [your IP]" to continue
+   - Camera will now work!
+
+#### Option 3: Use a Tunnel Service (Easiest for Quick Testing)
+
+Use ngrok or similar service to create an HTTPS tunnel:
+
+```bash
+# Install ngrok: https://ngrok.com/download
+ngrok http 3000
+# Use the HTTPS URL provided by ngrok
+```
+
+### Production Deployment
+
+For production, you'll need real SSL certificates:
+
+1. **Use a reverse proxy** (recommended):
+   - Nginx or Apache with SSL certificate
+   - Let's Encrypt for free SSL certificates
+
+2. **Use a hosting service** with built-in HTTPS:
+   - Heroku, Vercel, AWS, etc. provide HTTPS automatically
+
+The application will show a helpful warning message if accessed via HTTP (except localhost) to guide users.
+
 ## Legal Compliance
 
 ### Florida Statutory Requirements

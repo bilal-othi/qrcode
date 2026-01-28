@@ -1,11 +1,12 @@
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const QRCode = require('qrcode');
-const fs = require('fs').promises;
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3443; // Default HTTPS port
 
 // Increase body parser limit for base64 images (10MB)
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -14,7 +15,7 @@ app.use(express.static('public'));
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
-fs.mkdir(uploadsDir, { recursive: true })
+fs.promises.mkdir(uploadsDir, { recursive: true })
     .then(() => console.log('Uploads directory ready'))
     .catch(err => console.error('Error creating uploads directory:', err));
 
@@ -82,27 +83,10 @@ app.get('/qr', async (req, res) => {
 
 // Handle form submission
 app.post('/submit', async (req, res) => {
-    console.log('=== Form submission received ===');
-    console.log('Request body keys:', Object.keys(req.body));
-    console.log('Content-Type:', req.get('Content-Type'));
-    
     const { checked, name, phone, selfie } = req.body;
-    
-    console.log('Extracted data:', {
-        checked: checked,
-        name: name ? `${name.substring(0, 20)}...` : 'missing',
-        phone: phone ? `${phone.substring(0, 10)}...` : 'missing',
-        selfie: selfie ? `Present (${selfie.length} chars)` : 'missing'
-    });
     
     // Validate all required fields
     if (!checked || !name || !phone || !selfie) {
-        console.log('Validation failed:', {
-            checked: !!checked,
-            name: !!name,
-            phone: !!phone,
-            selfie: !!selfie
-        });
         return res.status(400).json({ 
             success: false, 
             message: 'Please fill in all fields, check the box, and take a selfie' 
@@ -124,44 +108,9 @@ app.post('/submit', async (req, res) => {
         const filename = `selfie_${sanitizedName}_${timestamp}.jpg`;
         const filepath = path.join(uploadsDir, filename);
         
-        console.log('Saving selfie to:', filepath);
-        
         // Convert base64 to buffer and save image file
-        // Handle both jpeg and png formats
-        let base64Data;
-        let finalFilename = filename;
-        let finalFilepath = filepath;
-        
-        if (selfie.startsWith('data:image/jpeg;base64,')) {
-            base64Data = selfie.replace(/^data:image\/jpeg;base64,/, '');
-        } else if (selfie.startsWith('data:image/png;base64,')) {
-            base64Data = selfie.replace(/^data:image\/png;base64,/, '');
-            // Change filename to .png if it's a PNG
-            finalFilename = filename.replace('.jpg', '.png');
-            finalFilepath = path.join(uploadsDir, finalFilename);
-        } else if (selfie.startsWith('data:image/')) {
-            // Extract format and base64 data
-            const matches = selfie.match(/^data:image\/(\w+);base64,(.+)$/);
-            if (matches) {
-                const format = matches[1];
-                base64Data = matches[2];
-                finalFilename = filename.replace('.jpg', `.${format}`);
-                finalFilepath = path.join(uploadsDir, finalFilename);
-            } else {
-                // Fallback: try to extract base64 data
-                base64Data = selfie.split(',')[1] || selfie;
-            }
-        } else {
-            // Assume it's already base64 without data URL prefix
-            base64Data = selfie;
-        }
-        
-        // Write the file
-        await fs.writeFile(finalFilepath, base64Data, 'base64');
-        
-        // Verify file was written
-        const stats = await fs.stat(finalFilepath);
-        console.log('Selfie image saved successfully:', finalFilename, `(${stats.size} bytes)`);
+        const base64Data = selfie.replace(/^data:image\/jpeg;base64,/, '');
+        await fs.promises.writeFile(filepath, base64Data, 'base64');
         
         // Create record linking selfie to waiver version
         // IMPORTANT: Update waiverVersion when waiver text changes
@@ -169,7 +118,7 @@ app.post('/submit', async (req, res) => {
             name: name,
             phone: phone,
             timestamp: new Date().toISOString(),
-            selfieFile: finalFilename,
+            selfieFile: filename,
             waiverVersion: '1.0', // Update this when waiver text changes
             checked: checked,
             ipAddress: req.ip || req.connection.remoteAddress
@@ -178,19 +127,14 @@ app.post('/submit', async (req, res) => {
         // Save record as JSON file
         const recordFilename = `record_${sanitizedName}_${timestamp}.json`;
         const recordFilepath = path.join(uploadsDir, recordFilename);
-        await fs.writeFile(recordFilepath, JSON.stringify(record, null, 2), 'utf8');
-        
-        // Verify record file was written
-        const recordStats = await fs.stat(recordFilepath);
-        console.log('Record file saved successfully:', recordFilename, `(${recordStats.size} bytes)`);
+        await fs.promises.writeFile(recordFilepath, JSON.stringify(record, null, 2), 'utf8');
         
         console.log('Check-in received and saved:', {
             name: record.name,
             phone: record.phone,
             timestamp: record.timestamp,
             selfieFile: record.selfieFile,
-            recordFile: recordFilename,
-            uploadsDir: uploadsDir
+            recordFile: recordFilename
         });
         
         // Send confirmation back
@@ -201,17 +145,24 @@ app.post('/submit', async (req, res) => {
         });
     } catch (error) {
         console.error('Error saving check-in:', error);
-        console.error('Error stack:', error.stack);
         res.status(500).json({
             success: false,
-            message: 'Error processing your check-in. Please try again.',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: 'Error processing your check-in. Please try again.'
         });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`QR Code available at http://localhost:${PORT}/qr`);
+// SSL certificate paths (for self-signed cert)
+const options = {
+    key: fs.readFileSync(path.join(__dirname, 'certs', 'server.key')),
+    cert: fs.readFileSync(path.join(__dirname, 'certs', 'server.crt'))
+};
+
+// Create HTTPS server
+https.createServer(options, app).listen(PORT, () => {
+    console.log(`HTTPS Server running on https://localhost:${PORT}`);
+    console.log(`QR Code available at https://localhost:${PORT}/qr`);
     console.log(`Selfies and records will be saved to: ${uploadsDir}`);
+    console.log(`\n⚠️  Using self-signed certificate. Your browser will show a security warning.`);
+    console.log(`   Click "Advanced" → "Proceed to localhost" to continue.`);
 });

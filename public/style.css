@@ -297,6 +297,25 @@ button:disabled {
     text-align: center;
 }
 
+.https-warning {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    color: #856404;
+    font-size: 14px;
+}
+
+.https-warning p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.https-warning strong {
+    color: #856404;
+}
+
 /* Tablet and Mobile - Below 768px */
 @media (max-width: 768px) {
     body {
